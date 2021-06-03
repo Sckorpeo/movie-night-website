@@ -1,0 +1,38 @@
+<% layout('layouts/boilerplate')%>
+    <main>
+        <div class="container pt-5 d-flex">
+            <div>
+                <% for(let movie of watchedMovies) {%>
+                    <div id='card' class="mb-4">
+
+                        <div class="card" style="width: 18rem; box-shadow: 0px 0px 10px;">
+                            <img src='<%= movie.image%>' class="card-img-top" alt="...">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <%= movie.name%> <span class="badge bg-secondary">
+                                            <%= movie.genre%>
+                                        </span>
+                                </h5>
+                                <p class="card-text">
+                                    <%= movie.description %>
+                                </p>
+                                <div class="card-body">
+                                    <a href="<%= movie.trailer%>" class="card-link">Trailer</a>
+                                </div>
+                                <% if(user==='60b7a4ff6be12a0ca026336f' ){%>
+                                    <div class="card-body">
+
+                                        <form action="/movie/<%= movie.id%>/edit" method="GET">
+                                            <button class="btn btn-danger">Edit</button>
+                                        </form>
+
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <% } %>
+            </div>
+        </div>
+
+    </main>

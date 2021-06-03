@@ -1,0 +1,35 @@
+<% layout('layouts/boilerplate')%>
+    <form action="/movie/add" method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Movie Name</label>
+            <input type="text" class="form-control" id="name" name="movie[name]">
+
+        </div>
+        <div class="mb-3">
+            <label for="genre" class="form-label">Genre</label>
+            <input type="text" class="form-control" id="genre" name="movie[genre]">
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <input type="text" class="form-control" id="description" name="movie[description]">
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Image Url</label>
+            <input type="text" class="form-control" id="image" name="movie[image]">
+        </div>
+        <div class="mb-3">
+            <label for="trailer" class="form-label">Trailer Url</label>
+            <input type="text" class="form-control" id="trailer" name="movie[trailer]">
+        </div>
+        <div class="mb-3">
+            <label for="featured" class="form-label">Featured: on/off</label>
+            <input type="text" class="form-control" id="featured" name="movie[isFeatured]">
+        </div>
+        <div class="mb-3">
+            <label for="watched" class="form-label">Watched: true/false</label>
+            <input type="text" class="form-control" id="watched" name="movie[watched]">
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
