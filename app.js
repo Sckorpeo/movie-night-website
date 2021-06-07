@@ -14,9 +14,8 @@ const User = require('./models/users');
 const methodOverride = require('method-override');
 const session = require('express-session');
 const { validateMovie, isLoggedIn } = require('./utils/middleware');
-const dbUrl = 'mongodb://localhost:27017/movieNights';
 const MongoStore = require('connect-mongo');
-// const dbUrl = process.env.DB;
+const dbUrl = process.env.DB;
 
 
 const movieRoutes = require('./routes/movie');
