@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== "production") {
+    require('dotenv').config();
+}
+
 const express = require('express');
 const ejsMate = require('ejs-mate');
 const path = require('path');
@@ -9,10 +13,17 @@ const Movie = require('./models/movies');
 const User = require('./models/users');
 const methodOverride = require('method-override');
 const session = require('express-session');
+const { validateMovie, isLoggedIn } = require('./utils/middleware');
+const dbUrl = 'mongodb://localhost:27017/movieNights';
+const MongoStore = require('connect-mongo');
+// const dbUrl = process.env.DB;
+
+
+const movieRoutes = require('./routes/movie');
 
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/movieNights', {
+mongoose.connect(dbUrl, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true,
@@ -32,10 +43,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+const store = MongoStore.create({
+    mongoUrl: dbUrl,
+    crypto: { secret: process.env.SECRET },
+    touchAfter: 24 * 3600
 
+});
 
 const sessionConfig = {
-    secret: 'thisshouldbeabettersecret!',
+    store,
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -51,32 +68,17 @@ app.use((req, res, next) => {
     if (!req.session.user_id) {
         req.session.user_id = null;
         res.locals.user = req.session.user_id;
+        res.locals.admin = process.env.ADMIN;
         next();
     } else {
         res.locals.user = req.session.user_id;
+        res.locals.admin = process.env.ADMIN;
         next();
     }
 
 });
 
-const validateMovie = (req, res, next) => {
-    const { error } = movieSchema.validate(req.body);
-    if (error) {
-        const msg = error.details.map(el => el.message).join(',')
-        throw new ExpressError(msg, 400)
-    } else {
-        next();
-    }
-};
-
-const isLoggedIn = (req, res, next) => {
-    if (!req.session.user_id) {
-        return res.redirect('/login')
-    }
-    next();
-};
-
-
+app.use('/movie', movieRoutes);
 
 app.get('/', isLoggedIn, catchAsync(async (req, res, next) => {
     const featuredMovies = await Movie.find({ isFeatured: 'on' })
@@ -85,9 +87,11 @@ app.get('/', isLoggedIn, catchAsync(async (req, res, next) => {
     res.render('home', { featuredMovies, voted, user })
 
 }));
+
 app.get('/login', (req, res) => {
     res.render('login')
 });
+
 app.post('/login', catchAsync(async (req, res, next) => {
     const { username, password } = req.body.user;
     const foundUser = await User.findAndValidate(username, password);
@@ -99,43 +103,11 @@ app.post('/login', catchAsync(async (req, res, next) => {
     }
 
 }));
+
 app.get('/logout', (req, res) => {
     req.session.user_id = null;
     res.redirect('/login');
 });
-app.get('/movie/add', isLoggedIn, (req, res) => {
-    res.render('movies/new')
-});
-app.post('/movie/add', isLoggedIn, validateMovie, catchAsync(async (req, res, next) => {
-    const movie = new Movie(req.body.movie);
-    await movie.save();
-    res.redirect('/movie/add')
-}));
-app.get('/movie/watched', isLoggedIn, catchAsync(async (req, res, next) => {
-    const watchedMovies = await Movie.find({ watched: true });
-    res.render('movies/watched', { watchedMovies });
-
-}));
-app.post('/movie/vote', isLoggedIn, catchAsync(async (req, res, next) => {
-    const { id } = req.body.movie;
-    await Movie.addVote(id);
-    req.session.voted = true;
-    res.redirect('/');
-}));
-app.put('/movie/:id', isLoggedIn, validateMovie, catchAsync(async (req, res, next) => {
-    const movie = await Movie.findByIdAndUpdate(req.params.id, { ...req.body.movie });
-    res.redirect('/');
-}));
-app.get('/movie/:id/edit', isLoggedIn, catchAsync(async (req, res, next) => {
-    const movie = await Movie.findById(req.params.id);
-    if (!movie) {
-        return res.redirect('/');
-    }
-    res.render('movies/edit', { movie })
-}));
-
-
-
 
 app.all('*', (req, res, next) => {
     next(new ExpressError('Page Not Found', 404))
@@ -146,7 +118,6 @@ app.use((err, req, res, next) => {
     if (!err.message) err.message = 'Something Went Wrong!'
     res.status(statusCode).render('error', { err });
 });
-
 
 app.listen(3000, () => {
     console.log('Listening on port 3000!')

@@ -1,9 +1,9 @@
 <% layout('layouts/boilerplate')%>
     <main>
         <div class="container pt-5 d-flex">
-            <div>
+            <div class="row">
                 <% for(let movie of watchedMovies) {%>
-                    <div id='card' class="mb-4">
+                    <div id='card' class="mb-4 mx-4 col">
 
                         <div class="card" style="width: 18rem; box-shadow: 0px 0px 10px;">
                             <img src='<%= movie.image%>' class="card-img-top" alt="...">
